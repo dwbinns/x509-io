@@ -18,7 +18,7 @@
   "repository": "github:dwbinns/x509-io",
   "dependencies": {
     "buffer-io": "^1.2.0",
-    "structured-io": "^1.0.0",
+    "structured-io": "^2.0.0",
     "x690-io": "^1.1.0"
   }
 }
