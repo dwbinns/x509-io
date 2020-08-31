@@ -1,9 +1,10 @@
 const x690 = require('x690-io');
 const SubjectAltName = require('./extensions/SubjectAltName');
-const {read, field, instance, optional} = require("structured-io");
+const {write, read, field, instance, optional} = require("structured-io");
 const BasicConstraints = require('./extensions/BasicConstraints');
 const AuthorityKeyIdentifier = require('./extensions/AuthorityKeyIdentifier');
 const SubjectKeyIdentifier = require('./extensions/SubjectKeyIdentifier');
+const AuthorityInformationAccess = require('./extensions/AuthorityInformationAccess');
 
 
 
@@ -13,10 +14,30 @@ const extensionTypes = [
     BasicConstraints,
     AuthorityKeyIdentifier,
     SubjectKeyIdentifier,
+    AuthorityInformationAccess,
 ];
 
 class Extension {
     // https://tools.ietf.org/html/rfc5280#section-4.1
+    constructor(extensionID, critical, extensionValue) {
+        this.extensionID = extensionID;
+        this.critical = critical;
+        this.extensionValue = extensionValue;
+    }
+
+    static subjectAltName(name) {
+        return new Extension(
+            new x690.OID(SubjectAltName.ID),
+            false,
+            write(new SubjectAltName(name)),
+        );
+    }
+
+    static basicConstraints() {
+        return new Extension(
+
+        );
+    }
 
     static encoding = x690.sequence(
         field('extensionID', x690.oid),
@@ -24,10 +45,15 @@ class Extension {
         field('extensionValue', x690.octetString )
     );
 
-    decodeExtension() {
+    decodeContent() {
         let extensionType = extensionTypes.filter(({ID}) => ID == this.extensionID.id).pop();
         if (!extensionType) throw new Error("Unknown extension type " + this.extensionID);
-        return read(this.extensionValue, instance(extensionType));
+        return [this.extensionValue, instance(extensionType)];
+    }
+
+    decodeExtension() {
+        let [value, encoding] = this.decodeContent();
+        return read(value, encoding);
         //return read(this.extensionValue, x690.auto);
     }
 
@@ -39,6 +65,8 @@ class Extension {
         this.extensionValue = write(extension);
     }
 
+
+
     toJSON() {
 
         try {
@@ -47,8 +75,8 @@ class Extension {
                 content: this.decodeExtension()
             };
         } catch (e) {
-            console.log("Failed to decode extension. Ignoring error.");
-            console.error(e.stack);
+            // console.log("Failed to decode extension. Ignoring error.");
+            // console.error(e.stack);
             return {
                 ...this,
                 error: e.message,

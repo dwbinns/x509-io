@@ -19,7 +19,7 @@ class TBSCertificate {
         field('subjectPublicKeyInfo', instance(SubjectPublicKeyInfo)),
         field('issuerUniqueID', optional(null, x690.explicit(1, x690.octetString), null)),
         field('subjectUniqueID', optional(null, x690.explicit(2, x690.octetString), null)),
-        field('extensions', optional([], x690.explicit(3, x690.sequenceOf(instance(Extension)))))
+        field('extensions', x690.explicit(3, x690.sequenceOf(instance(Extension)), []))
     );
 }
 module.exports = TBSCertificate;

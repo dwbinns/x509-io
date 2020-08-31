@@ -9,5 +9,9 @@ class Certificate {
         field('signatureAlgorithm', instance(AlgorithmIdentifier)),
         field('signature', x690.bitString )
     );
+
+    decodeContent() {
+        return [this.signature, x690.any];
+    }
 }
 module.exports = Certificate;

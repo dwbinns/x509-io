@@ -41,7 +41,7 @@ const assert = require('assert').strict;
 
 async function main() {
     let pem = Pem.read(exampleCertificate);
-    //pem.explain();
+    pem.sections[0].explain(Certificate);
     let output = new Pem();
     //console.log("decoded", pem.sections[0].decodeContent(TypedValue));
 
@@ -50,6 +50,7 @@ async function main() {
 
     //console.log(output.write());
 
+    Pem.read(output.write()).sections[0].explain(Certificate);
 
     assert.strictEqual(output.write().trim(), exampleCertificate.trim());
     console.log("test passed")

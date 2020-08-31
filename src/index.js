@@ -2,6 +2,8 @@
 // https://tools.ietf.org/html/rfc5280
 // https://www.cs.auckland.ac.nz/~pgut001/pubs/x509guide.txt
 
+Error.stackTraceLimit = Infinity;
+
 const { promises: { readFile } } = require('fs');
 const { asBuffer, toHex } = require('buffer-io');
 const Certificate = require("./asn1types/Certificate");
@@ -9,11 +11,11 @@ const CertificationRequest = require("./asn1types/csr/CertificationRequest");
 const CertificationRequestInfo = require("./asn1types/csr/CertificationRequestInfo");
 const { Pem } = require('x690-io');
 
-Error.stackTraceLimit = Infinity;
+
 
 function toJSON(certificate) {
     return JSON.stringify(certificate, (key, value) => {
-
+        //  if (value instanceof Date) return "date";
         if (value && value.type == "Buffer" && value.data) return toHex(value.data);
         if (value instanceof Uint8Array) return toHex(value);
         if (typeof value == "bigint") return value.toString();
@@ -31,11 +33,10 @@ async function main(inputFormat, inputFile, outputFormat) {
     if (inputFormat == 'pem') {
         for (let section of Pem.read(await readFile(inputFile, {encoding: 'utf8'})).sections) {
             console.log(section.type);
-            let decoded = section.decodeContent(types);
             if (outputFormat == "explain") {
                 section.explain(types);
             } else {
-                console.log(toJSON(decoded));
+                console.log(toJSON(section.decodeContent(types)));
             }
         }
 
@@ -62,4 +63,15 @@ if (require.main === module) {
     main(...process.argv.slice(2)).catch(console.error);
 }
 
-module.exports = { Certificate, asBuffer, CertificationRequest, CertificationRequestInfo };
+module.exports = {
+    Certificate,
+    asBuffer,
+    CertificationRequest,
+    CertificationRequestInfo,
+    AlgorithmIdentifier: require("./asn1types/AlgorithmIdentifier"),
+    SubjectPublicKeyInfo: require("./asn1types/SubjectPublicKeyInfo"),
+    Attribute: require("./asn1types/csr/Attribute"),
+    Extension: require("./asn1types/Extension"),
+    Name: require("./asn1types/Name"),
+    GeneralName: require("./asn1types/GeneralName"),
+};
