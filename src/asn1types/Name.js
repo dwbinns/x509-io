@@ -1,6 +1,6 @@
-const { field } = require('structured-io');
-const x690 = require('x690-io');
-const OID = require('x690-io/src/OID');
+import { field } from 'structured-io';
+import * as x690 from 'x690-io';
+
 
 
 class Name {
@@ -17,7 +17,7 @@ class Name {
     }
 
     static commonName(value) {
-        return new Name(new OID("2.5.4.3"), value);
+        return new Name(new x690.OID("2.5.4.3"), value);
     }
 
     // constructor(name, value) {
@@ -26,4 +26,4 @@ class Name {
     // }
 }
 
-module.exports = Name;
+export default Name;

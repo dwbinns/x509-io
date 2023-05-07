@@ -1,6 +1,5 @@
-const { field, instance } = require('structured-io');
-const x690 = require('x690-io');
-const AlgorithmIdentifier = require("./AlgorithmIdentifier");
+import { field, instance } from 'structured-io';
+import * as x690 from 'x690-io';import AlgorithmIdentifier from './AlgorithmIdentifier.js';
 
 class SubjectPublicKeyInfo {
     constructor(algorithm, publicKey) {
@@ -22,4 +21,4 @@ class SubjectPublicKeyInfo {
         field('publicKey', x690.bitString )
     );
 }
-module.exports = SubjectPublicKeyInfo;
+export default SubjectPublicKeyInfo;

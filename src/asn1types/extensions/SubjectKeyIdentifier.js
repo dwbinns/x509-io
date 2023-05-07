@@ -1,8 +1,7 @@
-const { field, instance } = require('structured-io');
-const x690 = require('x690-io');
-const GeneralName = require('../GeneralName');
+import { field, instance } from 'structured-io';
+import * as x690 from 'x690-io';import GeneralName from '../GeneralName.js';
 
-module.exports = class SubjectKeyIdentifier {
+export default class SubjectKeyIdentifier {
     constructor() {
         
     }

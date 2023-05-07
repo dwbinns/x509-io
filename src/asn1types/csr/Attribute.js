@@ -1,6 +1,5 @@
-const { field, instance } = require('structured-io');
-const x690 = require('x690-io');
-const Extension = require('../Extension');
+import { field, instance } from 'structured-io';
+import * as x690 from 'x690-io';import Extension from '../Extension.js';
 
 class Attribute {
     constructor(type, values) {
@@ -20,4 +19,4 @@ class Attribute {
         field('values', x690.setOf(x690.sequenceOf(instance(Extension))) )
     );
 }
-module.exports = Attribute;
+export default Attribute;

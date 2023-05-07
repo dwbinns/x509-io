@@ -1,10 +1,8 @@
-const { optional, field, instance } = require('structured-io');
-const auto = require('structured-io/src/encodings/auto');
-const x690 = require('x690-io');
-const X690Type = require('x690-io');
-const GeneralName = require('../GeneralName');
+import { optional, field, instance } from 'structured-io';
+import * as x690 from 'x690-io';
+import GeneralName from '../GeneralName.js';
 
-module.exports = class AuthorityKeyIdentifier {
+export default class AuthorityKeyIdentifier {
     // https://tools.ietf.org/html/rfc5280#section-4.2.1.9
     static ID = "2.5.29.35";
     static encoding = x690.sequence(

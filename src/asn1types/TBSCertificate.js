@@ -1,10 +1,9 @@
-const { sequence, call, optional, field, instance } = require('structured-io');
-const x690 = require('x690-io');
-const Name = require("./Name");
-const Extension = require("./Extension");
-const AlgorithmIdentifier = require("./AlgorithmIdentifier");
-const Validity = require("./Validity");
-const SubjectPublicKeyInfo = require("./SubjectPublicKeyInfo");
+import { sequence, call, optional, field, instance } from 'structured-io';
+import * as x690 from 'x690-io';import Name from './Name.js';
+import Extension from './Extension.js';
+import AlgorithmIdentifier from './AlgorithmIdentifier.js';
+import Validity from './Validity.js';
+import SubjectPublicKeyInfo from './SubjectPublicKeyInfo.js';
 
 class TBSCertificate {
     // https://tools.ietf.org/html/rfc5280#section-4.1.1.1
@@ -22,4 +21,4 @@ class TBSCertificate {
         field('extensions', x690.explicit(3, x690.sequenceOf(instance(Extension)), []))
     );
 }
-module.exports = TBSCertificate;
+export default TBSCertificate;

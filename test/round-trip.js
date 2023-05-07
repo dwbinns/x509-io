@@ -33,9 +33,9 @@ mXDUgwimdadF5F+bjSRUfmPs/SCMTx26zosT8TMobmTMoLPvMqYp+0e6DJ3xcX4o
 `;
 
 
-const {Pem} = require("x690-io");
-const Certificate = require("../src/asn1types/Certificate");
-const assert = require('assert').strict;
+import { Pem } from 'x690-io';
+import { Certificate } from 'x509-io';
+import assert from 'node:assert/strict';
 
 
 
@@ -57,4 +57,4 @@ async function main() {
     return 0;
 }
 
-main().catch(console.error).then((code = 1) => process.exitCode = code);
+await main();

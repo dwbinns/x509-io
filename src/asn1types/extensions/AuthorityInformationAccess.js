@@ -1,6 +1,5 @@
-const { field, instance } = require('structured-io');
-const x690 = require('x690-io');
-const GeneralName = require('../GeneralName');
+import { field, instance } from 'structured-io';
+import * as x690 from 'x690-io';import GeneralName from '../GeneralName.js';
 
 class AccessDescription {
     static encoding = x690.sequence(
@@ -9,7 +8,7 @@ class AccessDescription {
     );
 }
 
-module.exports = class AuthorityInformationAccess {
+export default class AuthorityInformationAccess {
 
     // https://tools.ietf.org/html/rfc5280#section-4.2.1.6
     static ID = "1.3.6.1.5.5.7.1.1";

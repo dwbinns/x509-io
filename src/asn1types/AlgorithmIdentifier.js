@@ -1,9 +1,9 @@
-const {field, optional } = require('structured-io');
-const x690 = require('x690-io');
+import { field, optional } from 'structured-io';
+import * as x690 from 'x690-io';
 
 
 class AlgorithmIdentifier {
-    constructor(algorithm, parameters = null) {
+    constructor(algorithm, parameters) {
         this.algorithm = algorithm;
         this.parameters = parameters;
     }
@@ -20,7 +20,7 @@ class AlgorithmIdentifier {
     // https://tools.ietf.org/html/rfc5280#section-4.1.1.2
     static encoding = x690.sequence(
         field("algorithm", x690.oid),
-        field("parameters", optional(null, x690.choice(x690.oid, x690.nullData))),
+        field("parameters", optional(undefined, x690.choice(x690.oid, x690.nullData))),
     );
 }
-module.exports = AlgorithmIdentifier;
+export default AlgorithmIdentifier;

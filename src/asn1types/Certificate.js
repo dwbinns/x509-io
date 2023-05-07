@@ -1,7 +1,6 @@
-const { field, instance } = require('structured-io');
-const x690 = require('x690-io');
-const AlgorithmIdentifier = require("./AlgorithmIdentifier");
-const TBSCertificate = require("./TBSCertificate");
+import { field, instance } from 'structured-io';
+import * as x690 from 'x690-io';import AlgorithmIdentifier from './AlgorithmIdentifier.js';
+import TBSCertificate from './TBSCertificate.js';
 
 class Certificate {
     static encoding = x690.sequence(
@@ -14,4 +13,4 @@ class Certificate {
         return [this.signature, x690.any];
     }
 }
-module.exports = Certificate;
+export default Certificate;

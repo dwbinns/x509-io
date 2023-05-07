@@ -1,10 +1,9 @@
-const x690 = require('x690-io');
-const SubjectAltName = require('./extensions/SubjectAltName');
-const {write, read, field, instance, optional} = require("structured-io");
-const BasicConstraints = require('./extensions/BasicConstraints');
-const AuthorityKeyIdentifier = require('./extensions/AuthorityKeyIdentifier');
-const SubjectKeyIdentifier = require('./extensions/SubjectKeyIdentifier');
-const AuthorityInformationAccess = require('./extensions/AuthorityInformationAccess');
+import * as x690 from 'x690-io';import SubjectAltName from './extensions/SubjectAltName.js';
+import { write, read, field, instance, optional } from 'structured-io';
+import BasicConstraints from './extensions/BasicConstraints.js';
+import AuthorityKeyIdentifier from './extensions/AuthorityKeyIdentifier.js';
+import SubjectKeyIdentifier from './extensions/SubjectKeyIdentifier.js';
+import AuthorityInformationAccess from './extensions/AuthorityInformationAccess.js';
 
 
 
@@ -84,4 +83,4 @@ class Extension {
         }
     }
 }
-module.exports = Extension;
+export default Extension;

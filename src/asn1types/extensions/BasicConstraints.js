@@ -1,8 +1,7 @@
-const { optional, field, instance } = require('structured-io');
-const x690 = require('x690-io');
-const GeneralName = require('../GeneralName');
+import { optional, field, instance } from 'structured-io';
+import * as x690 from 'x690-io';import GeneralName from '../GeneralName.js';
 
-module.exports = class BasicConstraints {
+export default class BasicConstraints {
     constructor(cA, pathLenConstraint) {
         this.cA = cA;
         this.pathLenConstraint = pathLenConstraint;

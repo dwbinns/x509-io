@@ -1,11 +1,10 @@
-const { field, instance } = require('structured-io');
-const { oid } = require('x690-io');
-const x690 = require('x690-io');
-const Attribute = require('./Attribute');
-const Name = require('../Name');
-const SubjectPublicKeyInfo = require('../SubjectPublicKeyInfo');
-const Extension = require('../Extension');
-const GeneralName = require('../GeneralName');
+import { field, instance } from 'structured-io';
+import * as x690 from 'x690-io';
+import Attribute from './Attribute.js';
+import Name from '../Name.js';
+import SubjectPublicKeyInfo from '../SubjectPublicKeyInfo.js';
+import Extension from '../Extension.js';
+import GeneralName from '../GeneralName.js';
 
 class CertificationRequestInfo {
     constructor(version, subject, subjectPKInfo, attributes) {
@@ -44,4 +43,4 @@ class CertificationRequestInfo {
     );
 
 }
-module.exports = CertificationRequestInfo;
+export default CertificationRequestInfo;

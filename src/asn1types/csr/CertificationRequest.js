@@ -1,8 +1,8 @@
-const { write, field, instance } = require('structured-io');
-const x690 = require('x690-io');
-const AlgorithmIdentifier = require("../AlgorithmIdentifier");
-const CertificationRequestInfo = require("./CertificationRequestInfo");
-const crypto = require("crypto");
+import { write, field, instance } from 'structured-io';
+import * as x690 from 'x690-io';
+import AlgorithmIdentifier from '../AlgorithmIdentifier.js';
+import CertificationRequestInfo from './CertificationRequestInfo.js';
+import crypto from 'crypto';
 
 class CertificationRequest {
 
@@ -46,4 +46,4 @@ class CertificationRequest {
     }
 }
 
-module.exports = CertificationRequest;
+export default CertificationRequest;

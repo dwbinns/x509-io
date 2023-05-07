@@ -1,6 +1,5 @@
-const { field } = require('structured-io');
-const x690 = require('x690-io');
-
+import { field } from 'structured-io';
+import * as x690 from 'x690-io';
 
 class Validity {
     static encoding = x690.sequence(
@@ -8,4 +7,4 @@ class Validity {
         field('notAfter', x690.utcTime ),
     );
 }
-module.exports = Validity;
+export default Validity;

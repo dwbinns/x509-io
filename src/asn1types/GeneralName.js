@@ -1,5 +1,5 @@
-const x690 = require('x690-io');
-const {field, sequence, optional} = require("structured-io");
+import * as x690 from 'x690-io';
+import { field, sequence, optional } from 'structured-io';
 
 class GeneralName {
     constructor(type, value) {
@@ -23,4 +23,4 @@ class GeneralName {
     );
 }
 
-module.exports = GeneralName;
+export default GeneralName;
