@@ -1,6 +1,6 @@
 {
   "name": "x509-io",
-  "version": "2.10.0",
+  "version": "2.11.0",
   "description": "JavaScript native x509 certificate parser",
   "exports": "./src/index.js",
   "type": "module",
@@ -16,5 +16,7 @@
     "structured-io": "^4.0.0",
     "x690-io": "^2.1.0"
   },
-  "workspaces": ["deps/*"]
+  "workspaces": [
+    "deps/*"
+  ]
 }
