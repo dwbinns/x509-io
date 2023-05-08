@@ -11,7 +11,7 @@ export default class BasicConstraints {
     static ID = "2.5.29.19";
     static encoding = x690.sequence(
         field("cA", optional(false, x690.boolean)),
-        field("pathLenConstraint", optional(null, x690.integer))
+        field("pathLenConstraint", optional(undefined, x690.integer))
     );
 };
 

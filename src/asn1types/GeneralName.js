@@ -16,10 +16,10 @@ class GeneralName {
 
     // https://tools.ietf.org/html/rfc5280#section-4.2.1.6
     static encoding = sequence(
-        field("rfc822Name", optional(null, x690.implicit(1, x690.ia5String))),
-        field("dnsName", optional(null, x690.implicit(2, x690.ia5String))),
-        field("uniformResourceIdentifier", optional(null, x690.implicit(6, x690.ia5String))),
-        field("ipAddress", optional(null, x690.implicit(7, x690.octetString))),
+        field("rfc822Name", optional(undefined, x690.implicit(1, x690.ia5String))),
+        field("dnsName", optional(undefined, x690.implicit(2, x690.ia5String))),
+        field("uniformResourceIdentifier", optional(undefined, x690.implicit(6, x690.ia5String))),
+        field("ipAddress", optional(undefined, x690.implicit(7, x690.octetString))),
     );
 }
 

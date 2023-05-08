@@ -16,8 +16,8 @@ class TBSCertificate {
         field('validity', instance(Validity)),
         field('subject', x690.sequenceOf(x690.setOf(instance(Name)))),
         field('subjectPublicKeyInfo', instance(SubjectPublicKeyInfo)),
-        field('issuerUniqueID', optional(null, x690.explicit(1, x690.octetString), null)),
-        field('subjectUniqueID', optional(null, x690.explicit(2, x690.octetString), null)),
+        field('issuerUniqueID', optional(undefined, x690.explicit(1, x690.octetString))),
+        field('subjectUniqueID', optional(undefined, x690.explicit(2, x690.octetString))),
         field('extensions', x690.explicit(3, x690.sequenceOf(instance(Extension)), []))
     );
 }
