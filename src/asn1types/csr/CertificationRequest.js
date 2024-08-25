@@ -1,8 +1,8 @@
-import { write, field, instance } from 'structured-io';
-import * as x690 from 'x690-io';
-import AlgorithmIdentifier from '../AlgorithmIdentifier.js';
-import CertificationRequestInfo from './CertificationRequestInfo.js';
 import crypto from 'crypto';
+import { write } from 'structured-io';
+import * as x690 from 'x690-io';
+import AlgorithmIdentifier from '../certificate/AlgorithmIdentifier.js';
+import CertificationRequestInfo from './CertificationRequestInfo.js';
 
 class CertificationRequest {
 
@@ -35,11 +35,13 @@ class CertificationRequest {
     }
 
     // https://tools.ietf.org/html/rfc2986
-    static encoding = x690.sequence(
-        field('certificationRequestInfo', instance(CertificationRequestInfo)),
-        field('signatureAlgorithm', instance(AlgorithmIdentifier)),
-        field('signature', x690.bitString )
+    static [x690.encoding] = x690.sequence(
+        x690.field('certificationRequestInfo', x690.instance(CertificationRequestInfo)),
+        x690.field('signatureAlgorithm', x690.instance(AlgorithmIdentifier)),
+        x690.field('signature', x690.bitString() )
     );
+
+    static [x690.name] = "CERTIFICATE REQUEST";
 
     decodeContent() {
         return [this.signature, x690.any];

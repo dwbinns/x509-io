@@ -1,19 +1,19 @@
-import { field, instance } from 'structured-io';
-import * as x690 from 'x690-io';import GeneralName from '../GeneralName.js';
+import * as x690 from 'x690-io';
+import GeneralName from '../certificate/GeneralName.js';
 
 class AccessDescription {
-    static encoding = x690.sequence(
-        field("accessMethod", x690.oid),
-        field("accessLocation", GeneralName)
+    static [x690.encoding] = x690.sequence(
+        x690.field("accessMethod", x690.oid()),
+        x690.field("accessLocation", x690.instance(GeneralName)),
     );
 }
 
 export default class AuthorityInformationAccess {
 
-    // https://tools.ietf.org/html/rfc5280#section-4.2.1.6
+    // https://www.rfc-editor.org/rfc/rfc5280.html#section-4.2.2.1
     static ID = "1.3.6.1.5.5.7.1.1";
-    static encoding = field("descriptions", x690.sequenceOf(
-        instance(AccessDescription)
+    static [x690.encoding] = x690.field("descriptions", x690.sequenceOf(
+        x690.instance(AccessDescription),
     ));
 };
 

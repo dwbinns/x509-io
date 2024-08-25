@@ -1,10 +1,9 @@
-import { field, instance } from 'structured-io';
 import * as x690 from 'x690-io';
+import Extension from '../certificate/Extension.js';
+import GeneralName from '../certificate/GeneralName.js';
+import RDNAttribute from '../certificate/RDNAttribute.js';
+import PublicKey from '../certificate/PublicKey.js';
 import Attribute from './Attribute.js';
-import Name from '../Name.js';
-import SubjectPublicKeyInfo from '../SubjectPublicKeyInfo.js';
-import Extension from '../Extension.js';
-import GeneralName from '../GeneralName.js';
 
 class CertificationRequestInfo {
     constructor(version, subject, subjectPKInfo, attributes) {
@@ -17,10 +16,10 @@ class CertificationRequestInfo {
     static forNames(publicKey, commonName, ...dnsNames) {
         return new CertificationRequestInfo(
             0,
-            [[Name.commonName(commonName)]],
-            SubjectPublicKeyInfo.ecPrime256v1(publicKey),
+            [[RDNAttribute.commonName(commonName)]],
+            PublicKey.ecPrime256v1(publicKey),
             dnsNames.length
-                ? [Attribute.extensionRequests(
+                ? [RDNAttribute.extensionRequests(
                     Extension.subjectAltName(
                         ...dnsNames.map(name => GeneralName.dnsName(name))
                     )
@@ -35,11 +34,11 @@ class CertificationRequestInfo {
     // }
 
     // https://tools.ietf.org/html/rfc2986#section-4
-    static encoding = x690.sequence(
-        field('version', x690.integer),
-        field('subject', x690.sequenceOf(x690.setOf(instance(Name)))),
-        field('subjectPKInfo', instance(SubjectPublicKeyInfo)),
-        field('attributes', x690.implicit(0, x690.sequenceOf(instance(Attribute)), []))
+    static [x690.encoding] = x690.sequence(
+        x690.field('version', x690.integer()),
+        x690.field('subject', x690.sequenceOf(x690.setOf(x690.instance(RDNAttribute)))),
+        x690.field('subjectPKInfo', x690.instance(PublicKey)),
+        x690.field('attributes', x690.implicit(0, x690.sequenceOf(x690.instance(RDNAttribute)), []))
     );
 
 }

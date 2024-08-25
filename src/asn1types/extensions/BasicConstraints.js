@@ -1,5 +1,4 @@
-import { optional, field, instance } from 'structured-io';
-import * as x690 from 'x690-io';import GeneralName from '../GeneralName.js';
+import * as x690 from 'x690-io';
 
 export default class BasicConstraints {
     constructor(cA, pathLenConstraint) {
@@ -9,9 +8,9 @@ export default class BasicConstraints {
 
     // https://tools.ietf.org/html/rfc5280#section-4.2.1.9
     static ID = "2.5.29.19";
-    static encoding = x690.sequence(
-        field("cA", optional(false, x690.boolean)),
-        field("pathLenConstraint", optional(undefined, x690.integer))
+    static [x690.encoding] = x690.sequence(
+        x690.field("cA", x690.optional(x690.boolean(), false)),
+        x690.field("pathLenConstraint", x690.optional(x690.integer()))
     );
 };
 

@@ -33,28 +33,20 @@ mXDUgwimdadF5F+bjSRUfmPs/SCMTx26zosT8TMobmTMoLPvMqYp+0e6DJ3xcX4o
 `;
 
 
-import { Pem } from 'x690-io';
-import { Certificate } from 'x509-io';
 import assert from 'node:assert/strict';
+import test from "node:test";
+import { Certificate } from 'x509-io';
+import { Pem } from 'x690-io';
 
 
-
-async function main() {
+test(function roundTripCertificate() {
     let pem = Pem.read(exampleCertificate);
-    pem.sections[0].explain(Certificate);
+
     let output = new Pem();
-    //console.log("decoded", pem.sections[0].decodeContent(TypedValue));
 
-    //pem.sections[0].explain(Certificate);
-    pem.sections.forEach(section => output.addSection(section.type, section.decodeContent(Certificate)));
+    let certificate = pem.sections[0].decodeContent(Certificate);
 
-    //console.log(output.write());
-
-    Pem.read(output.write()).sections[0].explain(Certificate);
+    output.encodeSection(certificate);
 
     assert.strictEqual(output.write().trim(), exampleCertificate.trim());
-    console.log("test passed")
-    return 0;
-}
-
-await main();
+});
