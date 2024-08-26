@@ -15,7 +15,6 @@ import KeyUsage from './src/asn1types/extensions/KeyUsage.js';
 import SubjectKeyIdentifier from './src/asn1types/extensions/SubjectKeyIdentifier.js';
 import ECPrivateKey from './src/asn1types/key/ECPrivateKey.js';
 import PKCS8PrivateKeyInfo from './src/asn1types/key/PKCS8PrivateKeyInfo.js';
-import { bytesToSignedBigint } from "./deps/x690-io/src/bigIntBytes.js";
 import AlgorithmIdentifier from "./src/asn1types/certificate/AlgorithmIdentifier.js";
 import https from 'node:https';
 import { once } from "node:events";
