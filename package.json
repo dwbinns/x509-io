@@ -16,7 +16,7 @@
     "@dwbinns/terminal": "^1.9.1",
     "buffer-io": "^2.3.0",
     "structured-io": "^4.0.0",
-    "x690-io": "^3.1.0"
+    "x690-io": "^3.2.0"
   },
   "workspaces": [
     "deps/*"
