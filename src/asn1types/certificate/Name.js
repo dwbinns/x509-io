@@ -25,7 +25,7 @@ export default class Name {
                 .filter(text => text.trim())
                 .map(item => 
                     item.split("+").map(attribute => 
-                        new RDNAttribute(...attribute.split("="))
+                        RDNAttribute.fromNameAndValue(...attribute.split("="))
                     )
                 )
         );

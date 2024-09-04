@@ -15,6 +15,10 @@ export default class RDNAttribute {
         this.value = value;
     }
 
+    static fromNameAndValue(name, value) {
+        return new RDNAttribute(x690.OID.fromName(name), value);
+    }
+
     static commonName(value) {
         return new RDNAttribute(new x690.OID("2.5.4.3"), value);
     }
