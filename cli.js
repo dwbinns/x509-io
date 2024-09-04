@@ -3,7 +3,7 @@
 import * as hex from "@dwbinns/base/hex";
 import { yellow } from '@dwbinns/terminal/colour';
 import tree from "@dwbinns/terminal/tree";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { Certificate, CertificationRequest, Extension, GeneralName, Name } from 'x509-io';
 import * as x690 from "x690-io";
 import { Pem } from 'x690-io';
@@ -46,7 +46,7 @@ function objectTree(name, object) {
             else if (object?.getDescription) summary = object.getDescription();
             else if (object instanceof Uint8Array) summary = hex.encode(object);
             else if (object instanceof Date) summary = object.toISOString();
-            else summary = object.constructor.name;
+            else summary = object.constructor?.name || "{}";
             return `${yellow(name)}: ${summary}`;
         },
         getChildren: ([, object], path) => {
@@ -71,7 +71,7 @@ async function show(input) {
 const generateParams = {
     rsa4096: {
         name: "RSASSA-PKCS1-v1_5",
-        modulusLength: 2048,
+        modulusLength: 4096,
         publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
     },
     secp256r1: {
@@ -178,13 +178,17 @@ async function generate(type, hash, output, authority, subject, usages, validity
     const isCA = usageList.includes("ca");
     const isClient = usageList.includes("client");
 
+    if (isCA) await mkdir(join(output, "certificates"));
+
     const signatureAlgorithmID = signatureIDs.find(signature => signature.hash == hash && signature.algorithm == issuerAlgorithm)?.id;
 
     const subjectPublicKey = x690.decode(new Uint8Array(publicKeyData), PublicKey);
 
+    const serialNumber = selfSigned ? 0 : 1 + (await readdir(join(authority, "certificates"))).length;
+
     const tbsCertificate = new TBSCertificate({
         version: 2,
-        serialNumber: 1n,
+        serialNumber: BigInt(serialNumber),
         signature: signatureAlgorithmID,
         issuer: issuerNames,
         validity: new Validity(
@@ -221,10 +225,12 @@ async function generate(type, hash, output, authority, subject, usages, validity
 
     const certificate = new Certificate(tbsCertificate, signatureAlgorithmID, x509Signature);
 
-    const outputPem = new Pem();
-    outputPem.encodeSection(certificate);
+    const certificatePem = new Pem();
+    certificatePem.encodeSection(certificate);
+    const certificateBytes = certificatePem.write()
 
-    await writePem(outputPem, join(output, "cert.pem"));
+    await writeFile(join(output, "cert.pem"), certificateBytes);
+    if (!selfSigned) await writeFile(join(authority, "certificates", `${subject}-${serialNumber}.pem`), certificateBytes);
 }
 
 
@@ -303,7 +309,7 @@ async function verify(issuerCertificateFile, subjectCertificateFile) {
     const spki = issuerCertificate.tbsCertificate.subjectPublicKeyInfo;
     const importOID = spki.algorithm.parameters?.id || spki.algorithm.algorithm.id;
 
-    const publicKey = await crypto.subtle.importKey("spki", x690.encode(spki), {...importParams[importOID], hash}, true, ["verify"]);
+    const publicKey = await crypto.subtle.importKey("spki", x690.encode(spki), { ...importParams[importOID], hash }, true, ["verify"]);
     const issuerAlgorithm = publicKey.algorithm.name;
     if (algorithm != issuerAlgorithm) throw "Algorithm mismatch";
     const isECDSA = issuerAlgorithm == "ECDSA";
@@ -324,8 +330,24 @@ async function verify(issuerCertificateFile, subjectCertificateFile) {
     // const issuerPrivateKey = issuerKey.decodeSection(PKCS8PrivateKeyInfo);
 }
 
-const commands = { show, generate, get, verify };
+function help() {
+    console.log(`
+x509-io show file.pem
+x509-io generate type hash output authority subject usages validity ...dnsNames
+        type: secp256r1 or rsa4096
+        hash: SHA-512 or SHA-256
+        output: a directory will be created here
+        authority: a directory containing a privateKey.pem and cert.pem of the certificate authority, or - to self sign
+        subject: a slash separated string of DN components, eg: /CN=example.com
+        usages: a comma separated list including some of: ca,client,server
+        dnsNames: a list of DNS names for the certificate
+x509-io verify authority.pem subject.pem
+x509-io get https://server [output]
+`);
+}
+
+const commands = { show, generate, get, verify, help };
 
 const [command, ...args] = process.argv.slice(2);
 
-await commands[command](...args);
+await (commands[command] || help)(...args);
