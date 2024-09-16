@@ -1,11 +1,8 @@
 //@ts-check
-import { instance, optional, field, sequence, integer, octetString, explicit, oid, bitString, OID, DataValue, encoding, name } from "x690-io";
-import PKCS8PrivateKeyInfo from "./PKCS8PrivateKeyInfo.js";
-
-function packPublicKey(x, y) {
-    return Buffer.concat([Buffer.from([4]), Buffer.from(x, "base64"), Buffer.from(y, "base64")]);
-}
-
+import { bitString, DataValue, encoding, explicit, field, instance, integer, name, octetString, oid, OID, optional, sequence } from "x690-io";
+import ECPublicKey from "./ECPublicKey.js";
+import SubjectPublicKeyInfo from "../certificate/SubjectPublicKeyInfo.js";
+import AlgorithmIdentifier from "../certificate/AlgorithmIdentifier.js";
 
 export default class ECPrivateKey {
     static ecPublicKey = new OID("1.2.840.10045.2.1");
@@ -39,7 +36,7 @@ export default class ECPrivateKey {
     static fromJWK({ kty, crv, x, y, d }) {
         if (kty != "EC" || crv != "P-256")
             throw new Error("Not a P-256 EC key");
-        return new ECPrivateKey(1, Buffer.from(d, "base64"), ECPrivateKey.prime256v1, packPublicKey(x, y));
+        return new ECPrivateKey(1, Buffer.from(d, "base64"), ECPrivateKey.prime256v1, ECPublicKey.fromJWK({x, y}, 32).toBytes());
 
     }
     static fromPKCS8(pkcs8Key) {
@@ -52,5 +49,9 @@ export default class ECPrivateKey {
             throw new Error("Not a P-256 curve");
         }
         return ecPrivateKey;
+    }
+
+    toPublicKeyBytes() {
+        return this.publicKey;
     }
 }

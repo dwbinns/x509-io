@@ -18,10 +18,11 @@ export default class Name {
         return "/" + this.rdnSequence.map(attributes => attributes.map(attribute => attribute.toString()).join("+")).join("/")
     }
 
-    static parse(text) {
+    static parse(input) {
+        if (input instanceof Name) return input;
         // Not complete - should also allow for escaping
         return new Name(
-            text.split("/")
+            input.split("/")
                 .filter(text => text.trim())
                 .map(item => 
                     item.split("+").map(attribute => 

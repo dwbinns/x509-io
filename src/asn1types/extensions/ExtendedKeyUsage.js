@@ -2,7 +2,7 @@ import * as x690 from 'x690-io';
 
 
 export default class ExtendedKeyUsage {
-    constructor(usages) {
+    constructor(usages = []) {
         this.usages = usages;
     }
 

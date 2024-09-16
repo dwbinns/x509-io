@@ -13,7 +13,7 @@ const names = [
 ];
 
 export default class KeyUsage {
-    constructor(flags) {
+    constructor(flags = {}) {
         this.flags = flags;
     }
 

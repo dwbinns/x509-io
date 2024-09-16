@@ -38,20 +38,20 @@ class Extension {
         this.extensionValue = extensionValue;
     }
 
-    static critical(extensionContent) {
+    static for(critical, extensionContent) {
         return new Extension(
-            extensionContent.constructor.ID,
-            true,
+            new x690.OID(extensionContent.constructor.ID),
+            critical,
             x690.encode(extensionContent),
-        )
+        );
+    }
+
+    static critical(extensionContent) {
+        return this.for(true, extensionContent);
     }
 
     static optional(extensionContent) {
-        return new Extension(
-            extensionContent.constructor.ID,
-            false,
-            x690.encode(extensionContent),
-        )
+        return this.for(false, extensionContent);
     }
 
 
@@ -90,12 +90,12 @@ class Extension {
         //return read(this.extensionValue, x690.auto);
     }
 
-    encodeExtension(extension) {
-        let extensionType = extension.constructor;
+    encodeExtension(extensionContent) {
+        let extensionType = extensionContent.constructor;
         let extensionOID = extensionTypes.filter(type => type == extensionType).map(({ ID }) => ID).pop();
         if (!extensionOID) throw new Error("Unknown extension type " + extensionType.name);
-        this.extensionID = new OID(extensionOID);
-        this.extensionValue = write(extension);
+        this.extensionID = new x690.OID(extensionOID);
+        this.extensionValue = x690.encode(extensionContent);
     }
 
     getDescription() {

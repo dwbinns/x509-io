@@ -42,10 +42,6 @@ class CertificationRequest {
     );
 
     static [x690.name] = "CERTIFICATE REQUEST";
-
-    decodeContent() {
-        return [this.signature, x690.any];
-    }
 }
 
 export default CertificationRequest;
