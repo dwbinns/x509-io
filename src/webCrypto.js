@@ -5,55 +5,81 @@ import TBSCertificate from "./asn1types/certificate/TBSCertificate.js";
 import PKCS8PrivateKeyInfo from "./asn1types/key/PKCS8PrivateKeyInfo.js";
 import X509ECSignature from "./asn1types/key/X509ECSignature.js";
 import Certificate from "./asn1types/certificate/Certificate.js";
+import { CertificationRequest, CertificationRequestInfo } from "../library.js";
 
 
 
-class WebCrypto {
-    async keyIdentifier(bytes) {
-        return await crypto.subtle.digest("SHA-256", bytes);
-    }
-
-    async sign(pkcs8Key, hash, content) {
-        let params = getImportParams(pkcs8Key.privateKeyAlgorithm, hash);
-        let privateKey = await crypto.subtle.importKey("pkcs8", pkcs8Key.toBytes(), params, true, ["sign"])
-        let name = privateKey.algorithm.name;
-        let isECDSA = name == "ECDSA";
-        const signature = new Uint8Array(await crypto.subtle.sign({ name, hash }, privateKey, content));
-
-        return isECDSA
-            ? x690.encode(X509ECSignature.fromWebCrypto(signature))
-            : signature;
-    }
-
-    async generate(type) {
-        const hash = "SHA-256"; // Not used, but required
-        const keyPair = await crypto.subtle.generateKey({ ...generateParams[type], hash }, true, ["sign"]);
-        const pkcs8Bytes = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
-        return PKCS8PrivateKeyInfo.fromBytes(pkcs8Bytes);
-    }
-
-
-    async verify(spki, signatureAlgorithm, signature, content) {
-        const { hash, algorithm } = getSignatureParams(signatureAlgorithm);
-
-        const importParams = getImportParams(spki.algorithm);
-        const publicKey = await crypto.subtle.importKey("spki", spki.toBytes(), { ...importParams, hash }, true, ["verify"]);
-
-        const issuerAlgorithm = publicKey.algorithm.name;
-        if (algorithm != issuerAlgorithm) throw "Algorithm mismatch";
-        const isECDSA = issuerAlgorithm == "ECDSA";
-
-        const webCryptoSignature = isECDSA
-            ? x690.decode(signature, X509ECSignature).toIEEEP1363()
-            : signature;
-
-        const params = { name: publicKey.algorithm.name, hash };
-
-        return await crypto.subtle.verify(params, publicKey, webCryptoSignature, content);
-    }
+async function keyIdentifier(bytes) {
+    return await crypto.subtle.digest("SHA-256", bytes);
 }
 
-export const webCrypto = new WebCrypto();
+export async function importKey(pkcs8Key, hash) {
+    let params = getImportParams(pkcs8Key.privateKeyAlgorithm, hash);
+    return await crypto.subtle.importKey("pkcs8", pkcs8Key.toBytes(), params, true, ["sign"])
+}
+
+export async function sign(pkcs8Key, hash, content) {
+    let privateKey = await importKey(pkcs8Key, hash);
+    let name = privateKey.algorithm.name;
+    let isECDSA = name == "ECDSA";
+    const signature = new Uint8Array(await crypto.subtle.sign({ name, hash }, privateKey, content));
+
+    return isECDSA
+        ? x690.encode(X509ECSignature.fromWebCrypto(signature))
+        : signature;
+}
+
+export async function generate(type) {
+    const hash = "SHA-256"; // Not used, but required
+    const keyPair = await crypto.subtle.generateKey({ ...generateParams[type], hash }, true, ["sign"]);
+    const pkcs8Bytes = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+    return PKCS8PrivateKeyInfo.fromBytes(pkcs8Bytes);
+}
+
+
+export async function verify(spki, signatureAlgorithm, signature, content) {
+    const { hash, algorithm } = getSignatureParams(signatureAlgorithm);
+
+    const importParams = getImportParams(spki.algorithm);
+    const publicKey = await crypto.subtle.importKey("spki", spki.toBytes(), { ...importParams, hash }, true, ["verify"]);
+
+    const issuerAlgorithm = publicKey.algorithm.name;
+    if (algorithm != issuerAlgorithm) throw "Algorithm mismatch";
+    const isECDSA = issuerAlgorithm == "ECDSA";
+
+    const webCryptoSignature = isECDSA
+        ? x690.decode(signature, X509ECSignature).toIEEEP1363()
+        : signature;
+
+    const params = { name: publicKey.algorithm.name, hash };
+
+    return await crypto.subtle.verify(params, publicKey, webCryptoSignature, content);
+}
+
+
+export async function makeCSR(subjectPrivateKey, hash, subject, { ca = false, server = false, client = false, dnsNames = [] } = {}) {
+
+    const spki = subjectPrivateKey.toSPKI();
+
+    const keyId = await keyIdentifier(spki.toBytes());
+
+    const signatureAlgorithm = subjectPrivateKey.privateKeyAlgorithm.toSignatureAlgorithm(hash);
+
+    const csrInfo = CertificationRequestInfo.create(subject, spki, keyId, client, server, ca, dnsNames);
+
+    const signature = await sign(subjectPrivateKey, hash, csrInfo.getBytes());
+
+    return new CertificationRequest(csrInfo, signatureAlgorithm, signature);
+}
+
+export async function makeCertificate(authorityPrivateKey, hash, csr, serialNumber = 1, validity = "1D", authorityCertificate) {
+    const tbsCertificate = TBSCertificate.createFromCSR(csr, serialNumber, validity, authorityCertificate);
+
+    const signatureAlgorithm = authorityPrivateKey.privateKeyAlgorithm.toSignatureAlgorithm(hash);
+    tbsCertificate.setSigningAlgorithmId(signatureAlgorithm);
+    const signature = await sign(authorityPrivateKey, hash, tbsCertificate.getBytes());
+    return new Certificate(tbsCertificate, signatureAlgorithm, signature);
+}
 
 
 const ECDSA = "ECDSA";
@@ -108,67 +134,19 @@ const generateParams = {
 
 
 
-export class Signing {
-    constructor(key, certificate) {
-        this.key = key;
-        this.certificate = certificate;
-    }
-
-    get certificatePem() {
-        return x690.Pem.encode(this.certificate).write();
-    }
-
-    get privateKeyPem() {
-        return x690.Pem.encode(this.key).write();
-    }
-
-    get publicKeyPem() {
-        return this.key.toSPKI().toPem().write();
-    }
-
-    async sign(subject, params) {
-        return await Signing.create(this, subject, params);
-    }
-
-    async server(hostname) {
-        return await this.sign(`CN=${hostname}`, { server: true, dnsNames: [hostname] });
-    }
-
-    static async CA() {
-        return this.selfSigned("CN=CA", { ca: true });
-    }
-
-    static async selfSigned(subject, params) {
-        return await this.create(null, subject, params);
-    }
-
-    static async create(authority, subject, { hash = "SHA-256", type = "secp256r1", serialNumber = 1, validity = "1D", ca = false, server = false, client = false, dnsNames = [] } = {}) {
-        const key = await webCrypto.generate(type);
-        const spki = key.toSPKI();
-
-        const keyIdentifier = await webCrypto.keyIdentifier(spki.toBytes());
-
-        const authorityKey = authority?.key || key;
-
-        const tbsCertificate = TBSCertificate.create(authority?.certificate, subject, spki, keyIdentifier, serialNumber, validity, client, server, ca, dnsNames);
-
-        const signatureAlgorithm = authorityKey.privateKeyAlgorithm.toSignatureAlgorithm(hash);
-        tbsCertificate.setSigningAlgorithmId(signatureAlgorithm);
-        const certificate = new Certificate(tbsCertificate, signatureAlgorithm, await webCrypto.sign(authorityKey, hash, tbsCertificate.getBytes()));
-
-        return new Signing(key, certificate);
-    }
-}
-
-
-
 export async function testCertificate(subject, options = {}) {
-    let ca = await Signing.CA();
-    let signing = await ca.sign(`CN=${subject}`, { server: true, client: false, dnsNames: [subject], ...options });
+    let caKey = await generate("secp256r1");
+    let caCert = await makeCertificate(caKey, "SHA-256", await makeCSR(caKey, "SHA-256", "CN=CA", {ca: true}), 0, "1D");
+
+    let key = await generate("secp256r1");
+    let cert = await makeCertificate(caKey, "SHA-256", await makeCSR(key, "SHA-256", `CN=${subject}`, {server: true, client: false, dnsNames: [subject]}), 0, "1D");
+
+    // let ca = await Signing.CA();
+    // let signing = await ca.sign(`CN=${subject}`, { server: true, client: false, dnsNames: [subject], ...options });
     return {
-        ca: ca.certificatePem,
-        cert: signing.certificatePem,
-        key: signing.privateKeyPem,
+        ca: caCert.toPem().write(),
+        cert: cert.toPem().write(),
+        key: caKey.toPem().write(),
     };
 }
 

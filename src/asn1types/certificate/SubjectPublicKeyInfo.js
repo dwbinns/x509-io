@@ -67,7 +67,7 @@ export default class SubjectPublicKeyInfo {
 
     get publicKeyDetails() {
         if (this.algorithm.algorithm.is("1.2.840.10045.2.1")) {
-            return ECPublicKey.fromBytes(this.publicKey);
+            return ECPublicKey.fromBytes(this.publicKey, 32);
         }
         if (this.algorithm.algorithm.is("1.2.840.113549.1.1.1")) {
             return x690.decode(this.publicKey, RSAPublicKey);

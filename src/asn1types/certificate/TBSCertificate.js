@@ -64,6 +64,27 @@ class TBSCertificate {
         x690.field('extensions', x690.explicit(3, x690.sequenceOf(x690.instance(Extension))))
     );
 
+    static createFromCSR(csr, serialNumber, validity, authorityCertificate) {
+        let tbsCertificate = new TBSCertificate({
+            serialNumber,
+        });
+
+        let csrInfo = csr.certificationRequestInfo;
+
+        tbsCertificate.setValidityDuration(validity);
+        tbsCertificate.subject = csrInfo.subject;
+        tbsCertificate.subjectPublicKeyInfo = csrInfo.subjectPKInfo;
+
+        tbsCertificate.extensions = csrInfo.attributes.flatMap(attribute => attribute.values.flat());
+
+        if (!authorityCertificate) tbsCertificate.setSelfSigned();
+        else tbsCertificate.setAuthority(authorityCertificate);
+
+
+
+        return tbsCertificate;
+    }
+
     static create(authorityCertificate, subject, spki, keyIdentifier, serialNumber, validity, client, server, ca, dnsNames) {
         let tbsCertificate = new TBSCertificate({
             serialNumber,
@@ -145,12 +166,12 @@ class TBSCertificate {
     }
 
     setSelfSigned() {
-        this.storeExtension(false, new AuthorityKeyIdentifier(this.getExtension(SubjectKeyIdentifier).keyIdentifier));
+        this.storeExtension(false, new AuthorityKeyIdentifier(this.getExtension(SubjectKeyIdentifier).id));
         this.issuer = this.subject;
     }
 
     setAuthority(authorityCertificate) {
-        this.storeExtension(false, new AuthorityKeyIdentifier(authorityCertificate.tbsCertificate.getExtension(SubjectKeyIdentifier).keyIdentifier));
+        this.storeExtension(false, new AuthorityKeyIdentifier(authorityCertificate.tbsCertificate.getExtension(SubjectKeyIdentifier).id));
         this.issuer = authorityCertificate.tbsCertificate.subject;
     }
 

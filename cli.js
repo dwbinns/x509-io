@@ -13,7 +13,9 @@ import SubjectPublicKeyInfo from './src/asn1types/certificate/SubjectPublicKeyIn
 import ECPrivateKey from './src/asn1types/key/ECPrivateKey.js';
 import PKCS8PrivateKeyInfo from './src/asn1types/key/PKCS8PrivateKeyInfo.js';
 import RSAPublicKey from "./src/asn1types/key/RSAPublicKey.js";
-import { Signing, webCrypto } from "./src/webCrypto.js";
+import * as webCrypto from "./src/webCrypto.js";
+
+Error.stackTraceLimit = Infinity;
 
 function children(object, prototype = object) {
     if (object instanceof Array) return [...object.entries()];
@@ -70,17 +72,6 @@ async function readPemFile(path, type) {
 }
 
 async function generate(type, hash, output, authority, subject, usageList, validity, ...dnsNames) {
-    const selfSigned = authority == "-";
-
-    const authoritySigning = authority == "-"
-        ? null
-        : new Signing(
-            await readPemFile(join(authority, "privateKey.pem"), PKCS8PrivateKeyInfo),
-            await readPemFile(join(authority, "cert.pem"), Certificate),
-        );
-
-    const serialNumber = authoritySigning ? 1 + (await readdir(join(authority, "certificates"))).length : 0;
-
     await mkdir(output);
 
     const usages = new Set(usageList.split(","));
@@ -90,15 +81,30 @@ async function generate(type, hash, output, authority, subject, usageList, valid
 
     if (ca) await mkdir(join(output, "certificates"));
 
-    const subjectSigning = await Signing.create(authoritySigning, subject, { serialNumber, hash, type, validity, ca, server, client, dnsNames })
+    let subjectPrivateKey = await webCrypto.generate(type);
 
-    await writeFile(join(output, "privateKey.pem"), subjectSigning.privateKeyPem);
-    await writeFile(join(output, "publicKey.pem"), subjectSigning.publicKeyPem);
+    await writeFile(join(output, "privateKey.pem"), subjectPrivateKey.toPem().write());
+    await writeFile(join(output, "publicKey.pem"), subjectPrivateKey.toSPKI().toPem().write());
 
-    const certificatePem = subjectSigning.certificatePem;
 
-    await writeFile(join(output, "cert.pem"), certificatePem);
-    if (!selfSigned) await writeFile(join(authority, "certificates", `${subject}-${serialNumber}.pem`), certificatePem);
+    let csr = await webCrypto.makeCSR(subjectPrivateKey, hash, subject, { ca, server, client, dnsNames });
+
+    await writeFile(join(output, "csr.pem"), csr.toPem().write());
+
+    if (authority == "-") return;
+
+    const selfSigned = authority == "@";
+    const authorityPrivateKey = selfSigned ? subjectPrivateKey : await readPemFile(join(authority, "privateKey.pem"), PKCS8PrivateKeyInfo);
+    const authorityCertificate = selfSigned ? null : await readPemFile(join(authority, "cert.pem"), Certificate);
+
+    const serialNumber = selfSigned ? 0 : 1 + (await readdir(join(authority, "certificates"))).length;
+
+    let certificate = await webCrypto.makeCertificate(authorityPrivateKey, hash, csr, serialNumber, validity, authorityCertificate);
+
+    let certificateText = certificate.toPem().write();
+
+    await writeFile(join(output, "cert.pem"), certificateText);
+    if (!selfSigned) await writeFile(join(authority, "certificates", `${subject}-${serialNumber}.pem`), certificateText);
 }
 
 
@@ -135,15 +141,19 @@ async function verify(issuerCertificateFile, subjectCertificateFile) {
 
 function help() {
     console.log(`
-x509-io show file.pem
-x509-io generate type hash output authority subject usages validity ...dnsNames
-        type: secp256r1 or rsa4096
-        hash: SHA-512 or SHA-256
-        output: a directory will be created here
-        authority: a directory containing a privateKey.pem and cert.pem of the certificate authority, or - to self sign
-        subject: a slash separated string of DN components, eg: /CN=example.com
-        usages: a comma separated list including some of: ca,client,server
-        dnsNames: a list of DNS names for the certificate
+x509-io show file.pem 
+    Describe a PEM file's content
+x509-io generate <type> <hash> <output> <authority> <subject> <usages> <validity> <dnsName> [<dnsName>...]
+    Generate a private key and certificate, either self signed or signed by an authority private key and certificate
+        <type>: private key type: secp256r1, RSA-4096, RSA-1024
+        <hash>: hash used in signature: SHA-512 or SHA-256
+        <output>: a directory will be created here containing cert.pem and privateKey.pem
+        <authority>: a directory containing a privateKey.pem and cert.pem of the certificate authority, or - to self sign
+        <subject>: a slash separated string of DN components, eg: /CN=example.com
+        <usages>: a comma separated list including some of: ca,client,server
+        <dnsName>: DNS names for the certificate        <subject>: a slash separated string of DN components, eg: /CN=example.com
+        <usages>: a comma separated list including some of: ca,client,server
+        <dnsName>: DNS names for the certificate
 x509-io verify authority.pem subject.pem
 x509-io get https://server [output]
 `);

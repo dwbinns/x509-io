@@ -23,7 +23,7 @@ class CertificationRequest {
     static sign(certificationRequestInfo, privateKey) {
         const sign = crypto.createSign("SHA256");
 
-        sign.end(write(certificationRequestInfo));
+        sign.end(x690.encode(certificationRequestInfo));
 
         let signature = sign.sign({key: privateKey});
 
@@ -40,6 +40,14 @@ class CertificationRequest {
         x690.field('signatureAlgorithm', x690.instance(AlgorithmIdentifier)),
         x690.field('signature', x690.bitString() )
     );
+
+    toPem() {
+        return x690.Pem.encode(this);
+    }
+
+    getBytes() {
+        return x690.encode(this);
+    }
 
     static [x690.name] = "CERTIFICATE REQUEST";
 }

@@ -20,5 +20,6 @@ export {
     CertificationRequestInfo,
 };
 
+export * as webCrypto from "./src/webCrypto.js";
 
-export { Signing, testCertificate } from "./src/webCrypto.js"
+export { testCertificate } from "./src/webCrypto.js"

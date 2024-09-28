@@ -17,6 +17,9 @@ export default class Certificate {
 
     static [x690.name] = "CERTIFICATE";
 
+    toPem() {
+        return x690.Pem.encode(this);
+    }
 
     static importCertificate(pem) {
         return x690.Pem.read(pem).decodeSection(Certificate);

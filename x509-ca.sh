@@ -6,8 +6,8 @@ cd data/x509
 
 rm -rf root-ec root-rsa server-rsa server-ec server-rsa-ec server-ec-rsa
 
-node ../../cli.js generate secp256r1 SHA-256 root-ec - /CN=issuer ca 1D
-node ../../cli.js generate RSA-1024 SHA-512 root-rsa - /CN=issuer ca 1D
+node ../../cli.js generate secp256r1 SHA-256 root-ec @ /CN=issuer ca 1D
+node ../../cli.js generate RSA-1024 SHA-512 root-rsa @ /CN=issuer ca 1D
 
 echo 'EC/EC'
 node ../../cli.js generate secp256r1 SHA-256 server-ec root-ec /CN=subject server 1D server.internal

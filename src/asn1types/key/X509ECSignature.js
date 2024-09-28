@@ -29,6 +29,7 @@ export default class X509ECSignature {
     }
 
     static fromWebCrypto(signatureBytes) {
+        //IEEE P1363:
         return new X509ECSignature(bytesToBigInt(signatureBytes.slice(0, 32)), bytesToBigInt(signatureBytes.slice(32)));
     }
 
