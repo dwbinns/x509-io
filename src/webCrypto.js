@@ -134,19 +134,19 @@ const generateParams = {
 
 
 
-export async function testCertificate(subject, options = {}) {
+export async function testCertificate(subject, { server = true, client = true, dnsNames = server ? [subject] : [] } = {}) {
     let caKey = await generate("secp256r1");
-    let caCert = await makeCertificate(caKey, "SHA-256", await makeCSR(caKey, "SHA-256", "CN=CA", {ca: true}), 0, "1D");
+    let caCert = await makeCertificate(caKey, "SHA-256", await makeCSR(caKey, "SHA-256", "CN=CA", { ca: true }), 0, "1D");
 
     let key = await generate("secp256r1");
-    let cert = await makeCertificate(caKey, "SHA-256", await makeCSR(key, "SHA-256", `CN=${subject}`, {server: true, client: false, dnsNames: [subject]}), 0, "1D");
+    let cert = await makeCertificate(caKey, "SHA-256", await makeCSR(key, "SHA-256", `CN=${subject}`, { server, client, dnsNames }), 0, "1D", caCert);
 
     // let ca = await Signing.CA();
     // let signing = await ca.sign(`CN=${subject}`, { server: true, client: false, dnsNames: [subject], ...options });
     return {
         ca: caCert.toPem().write(),
         cert: cert.toPem().write(),
-        key: caKey.toPem().write(),
+        key: key.toPem().write(),
     };
 }
 

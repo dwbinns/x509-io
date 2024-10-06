@@ -57,9 +57,12 @@ class CertificationRequestInfo {
 
         extensions.push(
             Extension.critical(keyUsage),
-            Extension.critical(extendedKeyUsage),
             Extension.critical(basicConstraints),
         );
+
+        if (extendedKeyUsage.usages.length) {
+            extensions.push(Extension.critical(extendedKeyUsage));
+        }
 
 
         return new CertificationRequestInfo(
